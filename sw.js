@@ -1,4 +1,4 @@
-  const CACHE = 'pv-offline-v2';
+const CACHE = 'pv-offline-v3';
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -8,7 +8,12 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(self.clients.claim());
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
@@ -22,4 +27,3 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request))
   );
 });
-
