@@ -11,18 +11,22 @@
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%); color: #fff; margin: 0; padding: 16px; display: flex; flex-direction: column; min-height: 100vh; justify-content: space-between; }
-    .top-bar { margin-top: env(safe-area-inset-top); display: flex; flex-direction: column; gap: 10px; }
-    .header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 700; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 12px 16px; border-radius: 16px; }
+    .top-bar { margin-top: env(safe-area-inset-top); display: flex; flex-direction: column; gap: 8px; }
+    .header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 700; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 11px 16px; border-radius: 16px; }
     .mode-switch { display: flex; background: rgba(0,0,0,0.25); padding: 4px; border-radius: 14px; gap: 4px; }
     .mode-btn { flex: 1; border: none; background: transparent; color: rgba(255,255,255,0.75); padding: 8px 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
     .mode-btn.active { background: #fff; color: #4338ca; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-    .verb-card { background: #fff; color: #1e1b4b; border-radius: 24px; padding: 24px 18px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.25); margin: 12px 0; }
-    .badge { display: inline-block; background: #e0e7ff; color: #4338ca; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 5px 12px; border-radius: 20px; margin-bottom: 8px; }
+    .rank-switch { display: flex; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; gap: 4px; }
+    .rank-btn { flex: 1; border: none; background: transparent; color: rgba(255,255,255,0.8); padding: 6px 4px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .rank-btn.active { background: #facc15; color: #1e1b4b; }
+    .verb-card { background: #fff; color: #1e1b4b; border-radius: 24px; padding: 22px 18px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.25); margin: 10px 0; }
+    .badge { display: inline-block; background: #e0e7ff; color: #4338ca; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 5px 12px; border-radius: 20px; }
     .badge.review { background: #fee2e2; color: #b91c1c; }
-    .verb-title { font-size: 32px; font-weight: 900; margin: 0; color: #1e1b4b; }
+    .rank-pill { display: inline-block; background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 20px; margin-left: 6px; }
+    .verb-title { font-size: 32px; font-weight: 900; margin: 10px 0 0 0; color: #1e1b4b; }
     .example-box { background: #f8fafc; border-left: 4px solid #7c3aed; padding: 12px 14px; border-radius: 10px; margin-top: 14px; font-size: 14px; color: #334155; text-align: left; display: none; line-height: 1.4; }
     .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    button.opt { background: rgba(255,255,255,0.95); color: #1e293b; border: none; border-radius: 18px; padding: 14px 10px; font-size: 14px; font-weight: 600; min-height: 110px; display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.15); line-height: 1.3; word-break: break-word; }
+    button.opt { background: rgba(255,255,255,0.95); color: #1e293b; border: none; border-radius: 18px; padding: 14px 10px; font-size: 14px; font-weight: 600; min-height: 105px; display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.15); line-height: 1.3; word-break: break-word; }
     button.opt:active { transform: scale(0.96); }
     button.opt.correct { background: #10b981 !important; color: #fff !important; }
     button.opt.wrong { background: #ef4444 !important; color: #fff !important; }
@@ -39,9 +43,18 @@
       <button class="mode-btn active" id="btn-all" onclick="setMode('all')">Tutti (3000+)</button>
       <button class="mode-btn" id="btn-mistakes" onclick="setMode('mistakes')">Da ripassare (<span id="mistakes-count">0</span>)</button>
     </div>
+    <div class="rank-switch">
+      <button class="rank-btn active" id="rk-all" onclick="setRank('all')">Tutti</button>
+      <button class="rank-btn" id="rk-high" onclick="setRank('high')">Essenziali 8-10</button>
+      <button class="rank-btn" id="rk-mid" onclick="setRank('mid')">Medi 4-7</button>
+      <button class="rank-btn" id="rk-low" onclick="setRank('low')">Rari 1-3</button>
+    </div>
   </div>
   <div class="verb-card">
-    <div class="badge" id="card-badge">Phrasal Verb</div>
+    <div>
+      <span class="badge" id="card-badge">Phrasal Verb</span>
+      <span class="rank-pill" id="rank-badge">Uso: -/10</span>
+    </div>
     <h1 class="verb-title" id="verb-text">Caricamento...</h1>
     <div class="example-box" id="example-box"></div>
   </div>
@@ -50,130 +63,152 @@
     <button class="next-btn" id="next-btn" onclick="nextQuestion()">Prossimo →</button>
   </div>
   <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-  }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
 
-  (function() {
-    var c = document.createElement('canvas'); c.width = 512; c.height = 512;
-    var ctx = c.getContext('2d');
-    var g = ctx.createLinearGradient(0, 0, 512, 512);
-    g.addColorStop(0, '#4f46e5'); g.addColorStop(0.5, '#7c3aed'); g.addColorStop(1, '#db2777');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, 512, 512);
-    ctx.fillStyle = '#fff'; ctx.font = '900 180px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('PV', 256, 235);
-    ctx.fillStyle = '#facc15'; ctx.font = '800 54px sans-serif'; ctx.fillText('QUIZ', 256, 365);
-    document.getElementById('apple-icon').href = c.toDataURL('image/png');
-  })();
+    (function() {
+      var c = document.createElement('canvas'); c.width = 512; c.height = 512;
+      var ctx = c.getContext('2d');
+      var g = ctx.createLinearGradient(0, 0, 512, 512);
+      g.addColorStop(0, '#4f46e5'); g.addColorStop(0.5, '#7c3aed'); g.addColorStop(1, '#db2777');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#fff'; ctx.font = '900 180px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('PV', 256, 235);
+      ctx.fillStyle = '#facc15'; ctx.font = '800 54px sans-serif'; ctx.fillText('QUIZ', 256, 365);
+      document.getElementById('apple-icon').href = c.toDataURL('image/png');
+    })();
 
-  var allVerbs = [], mistakes = JSON.parse(localStorage.getItem('pv_mistakes') || '[]');
-  var mode = 'all', currentVerb = null, score = 0, total = 0, streak = 0, answered = false;
-  var verbQueue = [], totalMeanings = 1, currentStep = 1;
-  document.getElementById('mistakes-count').innerText = mistakes.length;
-
-  var cached = localStorage.getItem('pv_database');
-  if (cached) { allVerbs = JSON.parse(cached); nextQuestion(); }
-
-  fetch('verbs.json').then(function(r) { return r.json(); }).then(function(data) {
-    allVerbs = data;
-    try { localStorage.setItem('pv_database', JSON.stringify(data)); } catch (e) {}
-    if (!cached) nextQuestion();
-  }).catch(function() {
-    if (!cached) document.getElementById('verb-text').innerText = 'Errore caricamento';
-  });
-
-  function saveMistakes() {
-    localStorage.setItem('pv_mistakes', JSON.stringify(mistakes));
+    var allVerbs = [], mistakes = JSON.parse(localStorage.getItem('pv_mistakes') || '[]');
+    var mode = 'all', rankFilter = 'all', currentVerb = null, score = 0, total = 0, streak = 0, answered = false;
+    var verbQueue = [], totalMeanings = 1, currentStep = 1;
     document.getElementById('mistakes-count').innerText = mistakes.length;
-  }
 
-  function setMode(m) {
-    if (m === 'mistakes' && !mistakes.length) { alert('Nessun errore da ripassare!'); return; }
-    mode = m;
-    verbQueue = [];
-    document.getElementById('btn-all').classList.toggle('active', mode === 'all');
-    document.getElementById('btn-mistakes').classList.toggle('active', mode === 'mistakes');
-    nextQuestion();
-  }
+    var cached = localStorage.getItem('pv_database');
+    if (cached) { allVerbs = JSON.parse(cached); nextQuestion(); }
 
-  function nextQuestion() {
-    if (mode === 'mistakes' && !mistakes.length && !verbQueue.length) {
-      alert('Tutti gli errori ripassati!');
-      setMode('all');
-      return;
-    }
-
-    answered = false;
-    document.getElementById('next-btn').style.display = 'none';
-    document.getElementById('example-box').style.display = 'none';
-    var cont = document.getElementById('options-container'); cont.innerHTML = '';
-    var pool = mode === 'mistakes' ? mistakes : allVerbs;
-
-    if (verbQueue.length > 0) {
-      currentVerb = verbQueue.shift();
-      currentStep++;
-    } else {
-      currentVerb = pool[Math.floor(Math.random() * pool.length)];
-      var targetName = currentVerb.verb.trim().toLowerCase();
-      var others = pool.filter(function(item) {
-        return item.verb.trim().toLowerCase() === targetName && item.meaning !== currentVerb.meaning;
-      });
-      verbQueue = others;
-      totalMeanings = 1 + others.length;
-      currentStep = 1;
-    }
-
-    var badge = document.getElementById('card-badge');
-    var baseLabel = mode === 'mistakes' ? 'Ripasso' : 'Phrasal Verb';
-    badge.innerText = totalMeanings > 1 ? baseLabel + ' • Significato ' + currentStep + ' di ' + totalMeanings : baseLabel;
-    badge.classList.toggle('review', mode === 'mistakes');
-
-    document.getElementById('verb-text').innerText = currentVerb.verb;
-
-    var choices = [currentVerb];
-    var currentName = currentVerb.verb.trim().toLowerCase();
-    while (choices.length < 4) {
-      var r = allVerbs[Math.floor(Math.random() * allVerbs.length)];
-      var isSameVerb = r.verb.trim().toLowerCase() === currentName;
-      var alreadyPicked = choices.some(function(c) { return c.meaning.toLowerCase() === r.meaning.toLowerCase(); });
-      if (!isSameVerb && !alreadyPicked) choices.push(r);
-    }
-    choices.sort(function() { return Math.random() - 0.5; });
-
-    choices.forEach(function(ch) {
-      var btn = document.createElement('button');
-      btn.className = 'opt'; btn.innerText = ch.meaning;
-      btn.onclick = function() { checkAnswer(btn, ch); };
-      cont.appendChild(btn);
+    fetch('verbs.json?v=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) {
+      allVerbs = data;
+      try { localStorage.setItem('pv_database', JSON.stringify(data)); } catch (e) {}
+      if (!cached || !allVerbs.rank) nextQuestion();
+    }).catch(function() {
+      if (!cached) document.getElementById('verb-text').innerText = 'Errore caricamento';
     });
-  }
 
-  function checkAnswer(btn, ch) {
-    if (answered) return;
-    answered = true; total++;
-    if (ch.meaning === currentVerb.meaning) {
-      btn.classList.add('correct'); score++; streak++;
-      var idx = mistakes.findIndex(function(m) { return m.verb === currentVerb.verb && m.meaning === currentVerb.meaning; });
-      if (idx !== -1) { mistakes.splice(idx, 1); saveMistakes(); }
-    } else {
-      btn.classList.add('wrong'); streak = 0;
-      if (!mistakes.some(function(m) { return m.verb === currentVerb.verb && m.meaning === currentVerb.meaning; })) {
-        mistakes.push(currentVerb); saveMistakes();
+    function saveMistakes() {
+      localStorage.setItem('pv_mistakes', JSON.stringify(mistakes));
+      document.getElementById('mistakes-count').innerText = mistakes.length;
+    }
+
+    function setMode(m) {
+      if (m === 'mistakes' && !mistakes.length) { alert('Nessun errore da ripassare!'); return; }
+      mode = m;
+      verbQueue = [];
+      document.getElementById('btn-all').classList.toggle('active', mode === 'all');
+      document.getElementById('btn-mistakes').classList.toggle('active', mode === 'mistakes');
+      nextQuestion();
+    }
+
+    function setRank(r) {
+      rankFilter = r;
+      verbQueue = [];
+      ['all', 'high', 'mid', 'low'].forEach(function(k) {
+        document.getElementById('rk-' + k).classList.toggle('active', rankFilter === k);
+      });
+      if (mode === 'mistakes') setMode('all');
+      else nextQuestion();
+    }
+
+    function getFilteredPool() {
+      if (mode === 'mistakes') return mistakes;
+      if (rankFilter === 'all') return allVerbs;
+      return allVerbs.filter(function(v) {
+        var rk = v.rank || 5;
+        if (rankFilter === 'high') return rk >= 8;
+        if (rankFilter === 'mid') return rk >= 4 && rk <= 7;
+        return rk <= 3;
+      });
+    }
+
+    function nextQuestion() {
+      if (mode === 'mistakes' && !mistakes.length && !verbQueue.length) {
+        alert('Tutti gli errori ripassati!');
+        setMode('all');
+        return;
       }
-      var btns = document.getElementById('options-container').children;
-      for (var i = 0; i < btns.length; i++) if (btns[i].innerText === currentVerb.meaning) btns[i].classList.add('correct');
+
+      answered = false;
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('example-box').style.display = 'none';
+      var cont = document.getElementById('options-container'); cont.innerHTML = '';
+      var pool = getFilteredPool();
+      if (!pool.length) pool = allVerbs;
+
+      if (verbQueue.length > 0) {
+        currentVerb = verbQueue.shift();
+        currentStep++;
+      } else {
+        currentVerb = pool[Math.floor(Math.random() * pool.length)];
+        var targetName = currentVerb.verb.trim().toLowerCase();
+        var others = pool.filter(function(item) {
+          return item.verb.trim().toLowerCase() === targetName && item.meaning !== currentVerb.meaning;
+        });
+        verbQueue = others;
+        totalMeanings = 1 + others.length;
+        currentStep = 1;
+      }
+
+      var badge = document.getElementById('card-badge');
+      var baseLabel = mode === 'mistakes' ? 'Ripasso' : 'Phrasal Verb';
+      badge.innerText = totalMeanings > 1 ? baseLabel + ' • ' + currentStep + '/' + totalMeanings : baseLabel;
+      badge.classList.toggle('review', mode === 'mistakes');
+
+      var rk = currentVerb.rank || '-';
+      document.getElementById('rank-badge').innerText = (rk >= 8 ? '🔥 ' : rk >= 4 ? '⚡ ' : '💎 ') + rk + '/10';
+      document.getElementById('verb-text').innerText = currentVerb.verb;
+
+      var choices = [currentVerb];
+      var currentName = currentVerb.verb.trim().toLowerCase();
+      while (choices.length < 4) {
+        var r = allVerbs[Math.floor(Math.random() * allVerbs.length)];
+        var isSameVerb = r.verb.trim().toLowerCase() === currentName;
+        var alreadyPicked = choices.some(function(c) { return c.meaning.toLowerCase() === r.meaning.toLowerCase(); });
+        if (!isSameVerb && !alreadyPicked) choices.push(r);
+      }
+      choices.sort(function() { return Math.random() - 0.5; });
+
+      choices.forEach(function(ch) {
+        var btn = document.createElement('button');
+        btn.className = 'opt'; btn.innerText = ch.meaning;
+        btn.onclick = function() { checkAnswer(btn, ch); };
+        cont.appendChild(btn);
+      });
     }
-    document.getElementById('score').innerText = '🎯 ' + score + ' / ' + total;
-    document.getElementById('streak').innerText = '🔥 ' + streak + ' di fila';
-    if (currentVerb.example) {
-      var ex = document.getElementById('example-box');
-      ex.innerHTML = '<strong>Esempio:</strong><br><em>"' + currentVerb.example + '"</em>';
-      ex.style.display = 'block';
+
+    function checkAnswer(btn, ch) {
+      if (answered) return;
+      answered = true; total++;
+      if (ch.meaning === currentVerb.meaning) {
+        btn.classList.add('correct'); score++; streak++;
+        var idx = mistakes.findIndex(function(m) { return m.verb === currentVerb.verb && m.meaning === currentVerb.meaning; });
+        if (idx !== -1) { mistakes.splice(idx, 1); saveMistakes(); }
+      } else {
+        btn.classList.add('wrong'); streak = 0;
+        if (!mistakes.some(function(m) { return m.verb === currentVerb.verb && m.meaning === currentVerb.meaning; })) {
+          mistakes.push(currentVerb); saveMistakes();
+        }
+        var btns = document.getElementById('options-container').children;
+        for (var i = 0; i < btns.length; i++) if (btns[i].innerText === currentVerb.meaning) btns[i].classList.add('correct');
+      }
+      document.getElementById('score').innerText = '🎯 ' + score + ' / ' + total;
+      document.getElementById('streak').innerText = '🔥 ' + streak + ' di fila';
+      if (currentVerb.example) {
+        var ex = document.getElementById('example-box');
+        ex.innerHTML = '<strong>Esempio:</strong><br><em>"' + currentVerb.example + '"</em>';
+        ex.style.display = 'block';
+      }
+      document.getElementById('next-btn').style.display = 'block';
     }
-    document.getElementById('next-btn').style.display = 'block';
-  }
-</script>
+  </script>
 </body>
 </html>
-
-
