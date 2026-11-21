@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Phrasal Quiz">
+  <link id="apple-icon" rel="apple-touch-icon">
   <title>Phrasal Quiz</title>
   <style>
     * {
@@ -16,11 +18,17 @@
       background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
       color: #ffffff;
       margin: 0;
-      padding: 18px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
       justify-content: space-between;
+    }
+    .top-bar {
+      margin-top: env(safe-area-inset-top);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     .header {
       display: flex;
@@ -30,44 +38,69 @@
       font-weight: 700;
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(10px);
-      padding: 12px 18px;
+      padding: 12px 16px;
       border-radius: 16px;
-      margin-top: env(safe-area-inset-top);
+    }
+    .mode-switch {
+      display: flex;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 4px;
+      border-radius: 14px;
+      gap: 4px;
+    }
+    .mode-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.75);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: #ffffff;
+      color: #4338ca;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     .verb-card {
       background: #ffffff;
       color: #1e1b4b;
       border-radius: 24px;
-      padding: 26px 20px;
+      padding: 24px 18px;
       text-align: center;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
-      margin: 16px 0;
+      margin: 12px 0;
     }
     .badge {
       display: inline-block;
       background: #e0e7ff;
       color: #4338ca;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 1px;
       padding: 5px 12px;
       border-radius: 20px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+    }
+    .badge.review {
+      background: #fee2e2;
+      color: #b91c1c;
     }
     .verb-title {
-      font-size: 34px;
+      font-size: 32px;
       font-weight: 900;
       margin: 0;
       color: #1e1b4b;
-      letter-spacing: -0.5px;
     }
     .example-box {
       background: #f8fafc;
       border-left: 4px solid #7c3aed;
       padding: 12px 14px;
       border-radius: 10px;
-      margin-top: 16px;
+      margin-top: 14px;
       font-size: 14px;
       color: #334155;
       text-align: left;
@@ -77,7 +110,7 @@
     .grid-2x2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 12px;
     }
     button.opt {
@@ -85,17 +118,16 @@
       color: #1e293b;
       border: none;
       border-radius: 18px;
-      padding: 16px 12px;
+      padding: 14px 10px;
       font-size: 14px;
       font-weight: 600;
-      min-height: 115px;
+      min-height: 110px;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
       cursor: pointer;
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-      transition: transform 0.12s ease, background-color 0.2s ease;
       line-height: 1.3;
       word-break: break-word;
     }
@@ -105,41 +137,42 @@
     button.opt.correct {
       background: #10b981 !important;
       color: #ffffff !important;
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
     }
     button.opt.wrong {
       background: #ef4444 !important;
       color: #ffffff !important;
-      box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
     }
     .next-btn {
       background: #facc15;
       color: #1e1b4b;
       border: none;
       border-radius: 18px;
-      padding: 16px;
+      padding: 15px;
       font-size: 18px;
       font-weight: 800;
       width: 100%;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
       display: none;
       margin-bottom: env(safe-area-inset-bottom);
-    }
-    .next-btn:active {
-      transform: scale(0.98);
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <span id="score">🎯 0 / 0</span>
-    <span id="streak">🔥 0 di fila</span>
+  <div class="top-bar">
+    <div class="header">
+      <span id="score">🎯 0 / 0</span>
+      <span style="font-size: 12px; opacity: 0.85;">⚡ Offline Ready</span>
+      <span id="streak">🔥 0 di fila</span>
+    </div>
+    <div class="mode-switch">
+      <button class="mode-btn active" id="btn-all" onclick="setMode('all')">Tutti (3000+)</button>
+      <button class="mode-btn" id="btn-mistakes" onclick="setMode('mistakes')">Da ripassare (<span id="mistakes-count">0</span>)</button>
+    </div>
   </div>
 
   <div class="verb-card">
-    <div class="badge">Phrasal Verb</div>
+    <div class="badge" id="card-badge">Phrasal Verb</div>
     <h1 class="verb-title" id="verb-text">Caricamento...</h1>
     <div class="example-box" id="example-box"></div>
   </div>
@@ -150,10 +183,40 @@
   </div>
 
   <script>
+    (function generateAppIcon() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 512, 512);
+      grad.addColorStop(0, '#4f46e5');
+      grad.addColorStop(0.5, '#7c3aed');
+      grad.addColorStop(1, '#db2777');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 180px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('PV', 256, 235);
+      ctx.fillStyle = '#facc15';
+      ctx.font = '800 54px -apple-system, sans-serif';
+      ctx.fillText('QUIZ', 256, 365);
+      document.getElementById('apple-icon').href = canvas.toDataURL('image/png');
+    })();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
     let allVerbs = [];
+    let mistakes = JSON.parse(localStorage.getItem('pv_mistakes') || '[]');
+    let mode = 'all';
     let currentVerb = null;
     let score = 0, total = 0, streak = 0;
     let answered = false;
+
+    updateMistakesCounter();
 
     fetch('verbs.json')
       .then(res => res.json())
@@ -162,21 +225,55 @@
         nextQuestion();
       })
       .catch(() => {
-        document.getElementById('verb-text').innerText = "Errore verbs.json";
+        document.getElementById('verb-text').innerText = "Errore caricamento";
       });
 
+    function saveMistakes() {
+      localStorage.setItem('pv_mistakes', JSON.stringify(mistakes));
+      updateMistakesCounter();
+    }
+
+    function updateMistakesCounter() {
+      document.getElementById('mistakes-count').innerText = mistakes.length;
+    }
+
+    function setMode(newMode) {
+      if (newMode === 'mistakes' && mistakes.length === 0) {
+        alert("Non hai ancora errori da ripassare!");
+        return;
+      }
+      mode = newMode;
+      document.getElementById('btn-all').classList.toggle('active', mode === 'all');
+      document.getElementById('btn-mistakes').classList.toggle('active', mode === 'mistakes');
+      nextQuestion();
+    }
+
     function nextQuestion() {
+      if (mode === 'mistakes' && mistakes.length === 0) {
+        alert("Complimenti! Hai ripassato tutti gli errori!");
+        setMode('all');
+        return;
+      }
+
       answered = false;
       document.getElementById('next-btn').style.display = 'none';
       document.getElementById('example-box').style.display = 'none';
       const container = document.getElementById('options-container');
       container.innerHTML = '';
 
-      // Pesca un phrasal verb casuale
-      currentVerb = allVerbs[Math.floor(Math.random() * allVerbs.length)];
+      const badge = document.getElementById('card-badge');
+      if (mode === 'mistakes') {
+        badge.innerText = "Ripasso Errore";
+        badge.classList.add('review');
+      } else {
+        badge.innerText = "Phrasal Verb";
+        badge.classList.remove('review');
+      }
+
+      const pool = mode === 'mistakes' ? mistakes : allVerbs;
+      currentVerb = pool[Math.floor(Math.random() * pool.length)];
       document.getElementById('verb-text').innerText = currentVerb.verb;
 
-      // Pesca 3 significati sbagliati diversi tra loro
       let choices = [currentVerb];
       while (choices.length < 4) {
         let rand = allVerbs[Math.floor(Math.random() * allVerbs.length)];
@@ -185,7 +282,6 @@
         }
       }
 
-      // Mescola le 4 opzioni nella matrice 2x2
       choices.sort(() => Math.random() - 0.5);
 
       choices.forEach(choice => {
@@ -208,10 +304,18 @@
         selectedBtn.classList.add('correct');
         score++;
         streak++;
+        const idx = mistakes.findIndex(m => m.verb === currentVerb.verb && m.meaning === currentVerb.meaning);
+        if (idx !== -1) {
+          mistakes.splice(idx, 1);
+          saveMistakes();
+        }
       } else {
         selectedBtn.classList.add('wrong');
         streak = 0;
-        // Mostra comunque quale era quella giusta in verde
+        if (!mistakes.some(m => m.verb === currentVerb.verb && m.meaning === currentVerb.meaning)) {
+          mistakes.push(currentVerb);
+          saveMistakes();
+        }
         Array.from(document.getElementById('options-container').children).forEach(b => {
           if (b.innerText === currentVerb.meaning) {
             b.classList.add('correct');
@@ -230,6 +334,3 @@
 
       document.getElementById('next-btn').style.display = 'block';
     }
-  </script>
-</body>
-</html>
