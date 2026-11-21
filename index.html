@@ -12,7 +12,9 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%); color: #fff; margin: 0; padding: 16px; display: flex; flex-direction: column; min-height: 100vh; justify-content: space-between; }
     .top-bar { margin-top: env(safe-area-inset-top); display: flex; flex-direction: column; gap: 8px; }
-    .header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 700; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 11px 16px; border-radius: 16px; }
+    .header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 10px 12px; border-radius: 16px; gap: 6px; }
+    .reset-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); color: #fff; border-radius: 10px; padding: 5px 9px; font-size: 11px; font-weight: 800; cursor: pointer; }
+    .reset-btn:active { background: #ef4444; border-color: #ef4444; }
     .mode-switch { display: flex; background: rgba(0,0,0,0.25); padding: 4px; border-radius: 14px; gap: 4px; }
     .mode-btn { flex: 1; border: none; background: transparent; color: rgba(255,255,255,0.75); padding: 8px 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
     .mode-btn.active { background: #fff; color: #4338ca; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
@@ -36,11 +38,13 @@
 <body>
   <div class="top-bar">
     <div class="header">
-      <span id="score">🎯 0 / 0</span>
-      <span id="streak">🔥 0 di fila</span>
+      <span id="progress">📚 0 / 0</span>
+      <span id="score">🎯 0/0</span>
+      <span id="streak">🔥 0</span>
+      <button class="reset-btn" onclick="resetAll()">🔄 Reset</button>
     </div>
     <div class="mode-switch">
-      <button class="mode-btn active" id="btn-all" onclick="setMode('all')">Tutti (3000+)</button>
+      <button class="mode-btn active" id="btn-all" onclick="setMode('all')">Tutti (<span id="cat-total-btn">...</span>)</button>
       <button class="mode-btn" id="btn-mistakes" onclick="setMode('mistakes')">Da ripassare (<span id="mistakes-count">0</span>)</button>
     </div>
     <div class="rank-switch">
@@ -79,25 +83,55 @@
       document.getElementById('apple-icon').href = c.toDataURL('image/png');
     })();
 
-    var allVerbs = [], mistakes = JSON.parse(localStorage.getItem('pv_mistakes') || '[]');
-    var mode = 'all', rankFilter = 'all', currentVerb = null, score = 0, total = 0, streak = 0, answered = false;
+    var allVerbs = [];
+    var mistakes = JSON.parse(localStorage.getItem('pv_mistakes') || '[]');
+    var doneKeys = JSON.parse(localStorage.getItem('pv_done') || '[]');
+    var stats = JSON.parse(localStorage.getItem('pv_stats') || '{"score":0,"total":0,"streak":0}');
+    var score = stats.score || 0, total = stats.total || 0, streak = stats.streak || 0;
+    var mode = 'all', rankFilter = 'all', currentVerb = null, answered = false;
     var verbQueue = [], totalMeanings = 1, currentStep = 1;
-    document.getElementById('mistakes-count').innerText = mistakes.length;
+
+    function getKey(v) {
+      return v.verb.trim().toLowerCase() + '||' + v.meaning.trim().toLowerCase();
+    }
+
+    function updateTopUI() {
+      document.getElementById('mistakes-count').innerText = mistakes.length;
+      document.getElementById('score').innerText = '🎯 ' + score + '/' + total;
+      document.getElementById('streak').innerText = '🔥 ' + streak;
+      var catPool = getRankPool();
+      var doneSet = new Set(doneKeys);
+      var doneInCat = catPool.filter(function(v) { return doneSet.has(getKey(v)); }).length;
+      document.getElementById('progress').innerText = '📚 ' + doneInCat + ' / ' + catPool.length;
+      document.getElementById('cat-total-btn').innerText = catPool.length;
+    }
 
     var cached = localStorage.getItem('pv_database');
-    if (cached) { allVerbs = JSON.parse(cached); nextQuestion(); }
+    if (cached) { allVerbs = JSON.parse(cached); updateTopUI(); nextQuestion(); }
 
     fetch('verbs.json?v=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) {
       allVerbs = data;
       try { localStorage.setItem('pv_database', JSON.stringify(data)); } catch (e) {}
-      if (!cached || !allVerbs.rank) nextQuestion();
+      updateTopUI();
+      if (!cached || (allVerbs && !allVerbs.rank)) nextQuestion();
     }).catch(function() {
       if (!cached) document.getElementById('verb-text').innerText = 'Errore caricamento';
     });
 
-    function saveMistakes() {
+    function saveAll() {
       localStorage.setItem('pv_mistakes', JSON.stringify(mistakes));
-      document.getElementById('mistakes-count').innerText = mistakes.length;
+      localStorage.setItem('pv_done', JSON.stringify(doneKeys));
+      localStorage.setItem('pv_stats', JSON.stringify({ score: score, total: total, streak: streak }));
+      updateTopUI();
+    }
+
+    function resetAll() {
+      if (!confirm('Vuoi azzerare punteggio, progressi e verbi da ripassare?')) return;
+      score = 0; total = 0; streak = 0;
+      mistakes = []; doneKeys = []; verbQueue = [];
+      saveAll();
+      if (mode === 'mistakes') setMode('all');
+      else nextQuestion();
     }
 
     function setMode(m) {
@@ -115,12 +149,12 @@
       ['all', 'high', 'mid', 'low'].forEach(function(k) {
         document.getElementById('rk-' + k).classList.toggle('active', rankFilter === k);
       });
+      updateTopUI();
       if (mode === 'mistakes') setMode('all');
       else nextQuestion();
     }
 
-    function getFilteredPool() {
-      if (mode === 'mistakes') return mistakes;
+    function getRankPool() {
       if (rankFilter === 'all') return allVerbs;
       return allVerbs.filter(function(v) {
         var rk = v.rank || 5;
@@ -141,16 +175,19 @@
       document.getElementById('next-btn').style.display = 'none';
       document.getElementById('example-box').style.display = 'none';
       var cont = document.getElementById('options-container'); cont.innerHTML = '';
-      var pool = getFilteredPool();
-      if (!pool.length) pool = allVerbs;
+      var basePool = mode === 'mistakes' ? mistakes : getRankPool();
+      if (!basePool.length) basePool = allVerbs;
 
       if (verbQueue.length > 0) {
         currentVerb = verbQueue.shift();
         currentStep++;
       } else {
-        currentVerb = pool[Math.floor(Math.random() * pool.length)];
+        var doneSet = new Set(doneKeys);
+        var unseen = mode === 'all' ? basePool.filter(function(v) { return !doneSet.has(getKey(v)); }) : basePool;
+        var pickFrom = unseen.length > 0 ? unseen : basePool;
+        currentVerb = pickFrom[Math.floor(Math.random() * pickFrom.length)];
         var targetName = currentVerb.verb.trim().toLowerCase();
-        var others = pool.filter(function(item) {
+        var others = basePool.filter(function(item) {
           return item.verb.trim().toLowerCase() === targetName && item.meaning !== currentVerb.meaning;
         });
         verbQueue = others;
@@ -188,20 +225,19 @@
     function checkAnswer(btn, ch) {
       if (answered) return;
       answered = true; total++;
+      var key = getKey(currentVerb);
       if (ch.meaning === currentVerb.meaning) {
         btn.classList.add('correct'); score++; streak++;
-        var idx = mistakes.findIndex(function(m) { return m.verb === currentVerb.verb && m.meaning === currentVerb.meaning; });
-        if (idx !== -1) { mistakes.splice(idx, 1); saveMistakes(); }
+        if (doneKeys.indexOf(key) === -1) doneKeys.push(key);
+        var idx = mistakes.findIndex(function(m) { return getKey(m) === key; });
+        if (idx !== -1) mistakes.splice(idx, 1);
       } else {
         btn.classList.add('wrong'); streak = 0;
-        if (!mistakes.some(function(m) { return m.verb === currentVerb.verb && m.meaning === currentVerb.meaning; })) {
-          mistakes.push(currentVerb); saveMistakes();
-        }
+        if (!mistakes.some(function(m) { return getKey(m) === key; })) mistakes.push(currentVerb);
         var btns = document.getElementById('options-container').children;
         for (var i = 0; i < btns.length; i++) if (btns[i].innerText === currentVerb.meaning) btns[i].classList.add('correct');
       }
-      document.getElementById('score').innerText = '🎯 ' + score + ' / ' + total;
-      document.getElementById('streak').innerText = '🔥 ' + streak + ' di fila';
+      saveAll();
       if (currentVerb.example) {
         var ex = document.getElementById('example-box');
         ex.innerHTML = '<strong>Esempio:</strong><br><em>"' + currentVerb.example + '"</em>';
